@@ -4,10 +4,33 @@ author: "mikiko"
 date: "2020/11/3"
 output: html_document
 ---
+
 #1 For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error.
 
+```{r}
+InsectSprays #open datasets
+str(InsectSprays)
+table(InsectSprays)
+
+ knitr::kable(InsectSprays)
+```
 
 
+
+
+
+
+#2Print a plot to see the differences of counts between sprays. Include a caption explaining the figure. Which type of plot is the one you choose and why?
+
+#3Test for differences between sprays using anova and a posthoc comparison and redo the previous plot including the representation of all posthoc differences.
+
+#4Test for differences between sprays using non-parametric Kruskal-Wallis rank sum test. Again, redo the plot with these results.
+
+#5Transform count data using sqrt(counts) and redo the anova, the Tukey posthoc comparison and the plot.
+
+#6Test for normality of residuals for the two performed anova analyses of points 4 and 6 using shapiro.test() and use plot the anova to see the qqplots and compare them.
+
+#7Which of the previous analysis is the adequate in this case? Why? Is there any difference in the results between the square root transformed ANOVA and the Kruskal-Wallis analyses? Is there any difference in the results between the direct ANOVA and the square root transformed ANOVA? Which ones?
 
 
 ```{r setup, include=FALSE}
