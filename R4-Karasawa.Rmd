@@ -1,58 +1,189 @@
 ---
-title: "20201103 exercise5"
-author: "mikiko"
-date: "2020/11/3"
+title: "Chapter 5: Hypothesis testing"
+author: "Mikiko Karasawa"
+date: "2020/11/13"
 output: html_document
 ---
 
-#1 For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path = "results/",
+dev = "png", dpi = 100)
+#install.packages("agricolae")
+```
+
+---
+
+#### **Exercise1**  
+**For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error.**
 
 ```{r}
-InsectSprays #open datasets
+#load and display the structure
+data(InsectSprays)
 str(InsectSprays)
-table(InsectSprays)
 
- knitr::kable(InsectSprays)
+#make data frame
+Spray <- character()
+Number_of_insect <-  numeric()
+Mean <-  numeric()
+Median <-  numeric()
+Standard_error <- numeric()
+
+for (i in levels(InsectSprays$spray)) {
+  Spray <- c(Spray, paste("Spray", i))
+  x <- InsectSprays$count[InsectSprays$spray == i ]
+  Number_of_insect <- c(Number_of_insect, sum(x) )
+  Mean <- c(Mean, mean(x))
+  Median <-  c(Median, median(x))
+  Standard_error <- c(Standard_error, sd(x) / sqrt(length(x)))
+  }
+
+DF <- data.frame(Spray, Number_of_insect, Mean, Median, Standard_error)
+
+#print the table with caption
+knitr::kable(DF, caption = "Table1. Number of insect, Mean, Median and Standard error for each spray") 
 ```
 
 
 
+---
 
+#### **Exercise2**  
+**Print a plot to see the differences of counts between sprays. Include a caption explaining the figure. Which type of plot is the one you choose and why?**    
 
+Here, a boxplot is used for comparing the variability of multiple data, because there is only one variables(spray) and  not ordered.
+```{r, fig.cap="Figure1. Effectiveness of InsectSprayA,B,C,D,E and F "}
+boxplot(count ~ spray, data = InsectSprays, ylab = "Insect count", xlab = "Type of spray", main = "Insect counts for each spray", col = 2:7)
+```
+other adding figure caption option:  
+#mtext("Figure1. Effectiveness of InsectSprayA,B,C,D,E and F ", side = 1, cex = 0.8, line = 4) 
 
-#2Print a plot to see the differences of counts between sprays. Include a caption explaining the figure. Which type of plot is the one you choose and why?
+when figure margin is too large:   
+#par(mar = c(0,0,2,0)) #adjust margin  
+#par(oma = c(3,3,3,2)) #adjust outer margin area  
 
-#3Test for differences between sprays using anova and a posthoc comparison and redo the previous plot including the representation of all posthoc differences.
+---
 
-#4Test for differences between sprays using non-parametric Kruskal-Wallis rank sum test. Again, redo the plot with these results.
+#### **Exercise3**  
+**Test for differences between sprays using anova and a posthoc comparison and redo the previous plot including the representation of all posthoc differences.**
 
-#5Transform count data using sqrt(counts) and redo the anova, the Tukey posthoc comparison and the plot.
-
-#6Test for normality of residuals for the two performed anova analyses of points 4 and 6 using shapiro.test() and use plot the anova to see the qqplots and compare them.
-
-#7Which of the previous analysis is the adequate in this case? Why? Is there any difference in the results between the square root transformed ANOVA and the Kruskal-Wallis analyses? Is there any difference in the results between the direct ANOVA and the square root transformed ANOVA? Which ones?
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+#ANOVA　　
+a1 <- aov(count~spray, data = InsectSprays)
+a1
+summary(a1)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+#TukeyHSD
+TukeyHSD(a1)
 ```
 
-## Including Plots
+Between C-A,D-A,E-A,C-B,D-B,E-B,F-C,F-D,F-E are p value < 0.05 and significant different  
 
-You can also embed plots, for example:
+```{r}　
+#install.packages("agricolae")
+library("agricolae")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+#HSD test and plot
+HT <- HSD.test(a1, "spray")
+HT
+```
+**TukeyHSD()** : Create a set of confidence intervals on the differences between the means of the levels of a factor with the specified family-wise probability of coverage. The intervals are based on the Studentized range statistic, Tukey's ‘Honest Significant Difference’ method.  
+**HSD.test()**: Multiple comparisons of treatments by means of Tukey. (α=0.05).  
+
+```{r, fig.cap="Figure2. Effectiveness of InsectSprayA,B,C,D,E and F.Show results with siginifant differences by TukeyHSD test. "}
+boxplot(count ~ spray, data = InsectSprays, ylab = "Insect count", xlab = "Type of spray", main = "Insect counts for each spray", col = 2:7)
+text(x = 1:6, y = 25, c("a","a","b","b","b","a")) #show groups
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+---
+
+#### **Exercise4**  
+
+**Test for differences between sprays using non-parametric Kruskal-Wallis rank sum test. Again, redo the plot with these results.**
+
+
+```{r, fig.cap="Figure3. Effectiveness of InsectSprayA,B,C,D,E and F. Show results with siginifant differences by Kruskal-Wallis test. "}
+data("InsectSprays")
+kw <- kruskal(InsectSprays$count, trt = InsectSprays$spray)
+kw
+boxplot(count ~ spray, data = InsectSprays, ylab = "Insect count", xlab = "Type of spray", main = "Insect counts for each spray", col = 2:7)
+text(x = 1:6, y = 25, c("a","a","c","b","bc","a")) #show groups
+
+```
+
+
+
+---
+
+#### **Exercise5**  
+
+**Transform count data using sqrt(counts) and redo the anova, the Tukey posthoc comparison and the plot.**  
+
+```{r}
+data("InsectSprays")
+SC <- sqrt(InsectSprays$count)   #squire root
+a2 <- aov(SC~spray, data = InsectSprays)
+#ANOVA
+a2
+summary(a2)
+#Tukey to see significant difference between 2 sprays
+TukeyHSD(a2)
+
+#HSDtest for grouping
+HSDtest <- HSD.test(a2, "spray")
+HSDtest
+```
+
+```{r, fig.cap="Figure4. Effectiveness of InsectSprayA,B,C,D,E and F.Show results with siginifant differences by TukeyHSD test. "}
+#make boxplot
+boxplot(SC ~ spray, data = InsectSprays, ylab = "Insect count", xlab = "Type of spray", main = "Insect counts for each spray (Square root)", col = 2:7)
+text(x = 1:6, y = 5, c("a","a","c","b","bc","a")) #show groups
+```
+
+---
+
+#### **Exercise6**  　
+**Test for normality of residuals for the two performed anova analyses of points 4 and 6 using shapiro.test() and use plot the anova to see the qqplots and compare them.**
+
+```{r}
+#shapiro test for direct ANOVA
+a1r <- a1$residuals
+shapiro.test(a1r)
+```
+p-value = 0.02226, not normal distribution  
+
+```{r}
+#shapirotest for square root transformed ANOVA 
+a2r <- a2$residuals
+shapiro.test(a2r)
+```
+p-value = 0.6814, normal distribution  
+
+```{r, fig.cap= "Figure5. QQ plot for direct ANOVA" }
+#use plot the anova to see the qqplots and compare them
+qqnorm(a1r, main = "QQ plot for direct ANOVA")
+qqline(a1r)
+```
+
+```{r, fig.cap="Figure6. QQ plot for square root transformed ANOVA"}
+qqnorm(a2r, main = "QQ plot for square root transformed ANOVA")
+qqline(a2r)
+```
+
+
+From QQ plot, the square root transformed data seems to follow a normal distribution.
+
+
+#### **Exercise7**  　
+**(1)Which of the previous analysis is the adequate in this case? Why? (2)Is there any difference in the results between the square root transformed ANOVA and the Kruskal-Wallis analyses? (3)Is there any difference in the results between the direct ANOVA and the square root transformed ANOVA? Which ones?**
+
+(1)For direct ANOVA data, p-value is 0.02226 which is not normal distribution. For square root transformed data, p-value = 0.6814 and follow normal distribution. Therefore, the square data is adequate for the analysis.  
+
+(2)There is no difference between the square root transformed ANOVA and the Kruskal-Wallis analyses.  
+
+(3)There are differences between the direct ANOVA and the square root transformed ANOVA. In spray C,D,E, there are difference.
+
+
+
